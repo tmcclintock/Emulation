@@ -33,9 +33,17 @@ class Emulator(object):
     def __str__(self):
         return self.name
 
+    """
+    This is the kriging kernel. You can change it's form either
+    by hard-coding in something different or by just
+    changing the kernel exponent.
+    """
     def Corr(self,x1,x2,length,amplitude):
         return amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**self.kernel_exponent)/length)
 
+    """
+    This makes the Kxx array.
+    """
     def make_Kxx(self,length,amplitude):
         x,y,yerr = self.xdata,self.ydata,self.yerr
         N = len(x)
@@ -47,11 +55,18 @@ class Emulator(object):
         self.Kxx = Kxx
         return Kxx
         
+    """
+    This inverts the Kxx array.
+    """
     def make_Kinv(self):
         Kxx = self.Kxx
         self.Kinv = np.linalg.inv(Kxx)
         return self.Kinv
 
+    """
+    This creates the new row/column extensions K_x,xstar.
+    Used for predicting ystar at xstar.
+    """
     def make_Kxxstar(self,xs):
         x,length,amplitude = self.xdata,self.length_best,self.amplitude_best
         Kxxs = np.zeros_like(x)
@@ -60,11 +75,19 @@ class Emulator(object):
         self.Kxxstar = Kxxs
         return Kxxs
 
+    """
+    This creates the new element K_xstarxstar.
+    Used for predicting ystar at xstar.
+    """
     def make_Kxstarxstar(self,xs):
         length,amplitude = self.length_best,self.amplitude_best
         self.Kxstarxstar = self.Corr(xs,xs,length,amplitude)
         return self.Kxstarxstar
 
+    """
+    This is the log probability used for training
+    to find the best amplitude and kriging length.
+    """
     def lnp(self,params):
         length,amplitude = np.exp(params[0]),np.exp(params[1])
         K = self.make_Kxx(length,amplitude)
@@ -72,6 +95,10 @@ class Emulator(object):
         return -0.5*np.dot(y,np.dot(Kinv,y))\
             - 0.5*np.log(np.linalg.det(2*np.pi*K))
 
+    """
+    This initiates the training process and
+    remembers the length, amplitude, and Kxx array.
+    """
     def train(self):
         nll = lambda *args: -self.lnp(*args)
         guesses = (1.0,1.0)
@@ -83,6 +110,9 @@ class Emulator(object):
         self.trained = True
         return
 
+    """
+    This predicts a single ystar given an xstar.
+    """
     def predict_one_point(self,xs):
         if not self.trained:
             raise Exception("Emulator is not yet trained")
@@ -93,6 +123,11 @@ class Emulator(object):
         return (np.dot(Kxxs,np.dot(Kinv,self.ydata)),\
                 np.sqrt(Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs))))
 
+    """
+    This is a wrapper for predict_one_point so that
+    we can work with a list of xstars that are predicted
+    one at a time.
+    """
     def predict(self,xs):
         if not self.trained:
             raise Exception("Emulator is not yet trained")
