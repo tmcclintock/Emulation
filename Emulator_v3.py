@@ -101,6 +101,9 @@ class Emulator(object):
     remembers the length, amplitude, and Kxx array.
     """
     def train(self):
+        #Before actually training, figure out how many
+        #kriging lengths we need here
+        ##################
         nll = lambda *args: -self.lnp(*args)
         guesses = (1.0,1.0)
         lb,ab = op.minimize(nll,guesses)['x']
