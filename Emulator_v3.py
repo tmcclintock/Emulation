@@ -27,7 +27,7 @@ class Emulator(object):
         self.Kinv = 0
         self.Kxxstar = 0
         self.Kxstarxstar = 0
-        self.lengths_best = []
+        self.lengths_best = np.ones_like(np.atleast_1d(xdata)[0])
         self.amplitude_best = 0
         self.trained = False
 
