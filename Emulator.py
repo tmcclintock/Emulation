@@ -89,6 +89,7 @@ class Emulator(object):
     to find the best amplitude and kriging length.
     """
     def lnp(self,params):
+        y = self.ydata
         length,amplitude = np.exp(params[0]),np.exp(params[1])
         K = self.make_Kxx(length,amplitude)
         Kinv = np.linalg.inv(K)
