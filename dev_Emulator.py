@@ -164,14 +164,15 @@ if __name__ == '__main__':
     emu = Emulator(name="Test emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
     emu.train()
     print "Best parameters = ",emu.length_best,emu.amplitude_best
-    xstar = np.array([np.linspace(np.min(x1)-1,np.max(x1)+1,500),\
-                          np.ones(500)*np.mean(x2)]).T
-    
+    N = 100
+    xstar = np.array([np.linspace(np.min(x1)-1,np.max(x1)+1,N),\
+                      np.linspace(np.max(x2)+1,np.min(x2)-1,N)]).T
+
     ystar,ystarerr = emu.predict(xstar)
 
     import matplotlib.pyplot as plt
     xplot = x1
-    xsplot = np.linspace(np.min(x1)-1,np.max(x1)+1,500)
+    xsplot = np.linspace(np.min(x1)-1,np.max(x1)+1,N)
     plt.errorbar(xplot,y,np.fabs(yerr),ls='',marker='o')
     plt.plot(xsplot,ystar,ls='-',c='r')
     plt.plot(xsplot,ystar+ystarerr,ls='-',c='g')
