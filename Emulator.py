@@ -14,6 +14,7 @@ on some new input xstar.
 
 import numpy as np
 import scipy.optimize as op
+import pickle
 
 class Emulator(object):
     def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
@@ -32,6 +33,31 @@ class Emulator(object):
 
     def __str__(self):
         return self.name
+
+    """
+    These functions save all parts of the emulator, so that it can be
+    loaded up again. This could save the hassle of
+    training, if that happens to take a long time.
+    """
+    def save(self):
+        pickle.dump(self,open("%s.p"%(self.name),"wb"))
+        return
+
+    def load(self,fname):
+        emu_in = pickle.load(open("%s.p"%(fname),"rb"))
+        self.name = emu_in.name
+        self.kernel_exponent = emu_in.kernel_exponent
+        self.xdata = emu_in.xdata
+        self.ydata = emu_in.ydata
+        self.yerr = emu_in.yerr
+        self.Kxx = emu_in.Kxx
+        self.Kinv = emu_in.Kinv
+        self.Kxxstar = emu_in.Kxxstar
+        self.Kxstarxstar = emu_in.Kxstarxstar
+        self.length_best = emu_in.length_best
+        self.amplitude_best = emu_in.amplitude_best
+        self.trained = emu_in.trained
+        return
 
     """
     This is the kriging kernel. You can change it's form either
@@ -151,9 +177,14 @@ if __name__ == '__main__':
     y = np.sin(x) + yerr
 
     #Declare an emulator, train it, and predict with it.
-    emu = Emulator(name="Test emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
+    emu = Emulator(name="Test_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
     emu.train()
     print "Best parameters = ",emu.length_best,emu.amplitude_best
+
+    emu.save()
+    emu.load("Test_emulator")
+    print "Best parameters = ",emu.length_best,emu.amplitude_best
+
     xstar = np.linspace(np.min(x)-1,np.max(x)+1,500)
     ystar,ystarerr = emu.predict(xstar)
 
