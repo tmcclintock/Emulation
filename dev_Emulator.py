@@ -40,8 +40,11 @@ class Emulator(object):
     loaded up again. This could save the hassle of
     training, if that happens to take a long time.
     """
-    def save(self):
-        pickle.dump(self,open("%s.p"%(self.name),"wb"))
+    def save(self,path=None):
+        if path == None:
+            pickle.dump(self,open("%s.p"%(self.name),"wb"))
+        else:
+            pickle.dump(self,open("%s.p"%path,"wb"))
         return
 
     def load(self,fname):
@@ -185,11 +188,12 @@ if __name__ == '__main__':
     yerr = 0.05+0.5 * np.random.rand(len(x1))
     y = np.sin(x1) + yerr + np.cos(x2)
     x = np.array([x1,x2])
+    print x.shape
 
     #Declare an emulator, train it, and predict with it.
     emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
     emu.train()
-    emu.save()
+    emu.save("Dev_emulator")
     print "here",emu
     emu.load("Dev_emulator")
     print "Best parameters = ",emu.length_best,emu.amplitude_best
