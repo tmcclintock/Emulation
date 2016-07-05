@@ -173,25 +173,52 @@ if __name__ == '__main__':
 
     #Try emulating on some periodic data
     np.random.seed(85719)
-    x = np.linspace(0,10,num=10)#10 * np.sort(np.random.rand(Nx))
-    yerr = 0.05+0.5 * np.random.rand(len(x))
-    y = np.sin(x) + yerr
+    #x = np.linspace(0,10,num=10)#10 * np.sort(np.random.rand(Nx))
+    #yerr = 0.05+0.5 * np.random.rand(len(x))
+    #y = np.sin(x) + yerr
+    x = np.loadtxt("test_data/scale_factors.txt")
+    print x
+    y = np.loadtxt("test_data/farr.txt")
+    yerr = np.loadtxt("test_data/ferr.txt")
 
     #Declare an emulator, train it, and predict with it.
-    emu = Emulator(name="Test_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
+    emu = Emulator(name="Test_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
     emu.train()
-    print "Best parameters = ",emu.length_best,emu.amplitude_best
-
     emu.save()
     emu.load("Test_emulator")
     print "Best parameters = ",emu.length_best,emu.amplitude_best
 
-    xstar = np.linspace(np.min(x)-1,np.max(x)+1,500)
+    xstar = np.linspace(np.min(x)-0.1,np.max(x)+1,500)
     ystar,ystarerr = emu.predict(xstar)
 
     import matplotlib.pyplot as plt
-    plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o')
+    plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o',ms=2,label="f")
     plt.plot(xstar,ystar,ls='-',c='r')
     plt.plot(xstar,ystar+ystarerr,ls='-',c='g')
     plt.plot(xstar,ystar-ystarerr,ls='-',c='g')
+    #plt.show()
+
+
+    x2 = np.loadtxt("test_data/scale_factors.txt")
+    y2 = np.loadtxt("test_data/garr.txt")
+    yerr2 = np.loadtxt("test_data/gerr.txt")
+    #Declare an emulator, train it, and predict with it.
+    emu2 = Emulator(name="Test_emulator2",xdata=x2,ydata=y2,yerr=np.fabs(yerr2))
+    emu2.train()
+    emu2.save()
+    emu2.load("Test_emulator2")
+    print "Best parameters = ",emu2.length_best,emu2.amplitude_best
+    xstar2 = np.linspace(np.min(x2)-0.1,np.max(x2)+1,500)
+    ystar2,ystarerr2 = emu2.predict(xstar2)
+    plt.errorbar(x2,y2,np.fabs(yerr2),ls='',marker='o',ms=2,label="g")
+    plt.plot(xstar2,ystar2,ls='-',c='r')
+    plt.plot(xstar2,ystar2+ystarerr2,ls='-',c='g')
+    plt.plot(xstar2,ystar2-ystarerr2,ls='-',c='g')
+    plt.ylabel("Tinker08 parameters",fontsize=28)
+    plt.xlabel("scale factor",fontsize=28)
+    leg = plt.legend(loc="lower right",fancybox=True)
+    leg.get_frame().set_alpha(0.5)
+    plt.subplots_adjust(bottom=0.15)
+    plt.xlim(0.15,1.1)
+    plt.ylim(0.4,1.3)
     plt.show()
