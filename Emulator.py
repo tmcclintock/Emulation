@@ -39,8 +39,11 @@ class Emulator(object):
     loaded up again. This could save the hassle of
     training, if that happens to take a long time.
     """
-    def save(self):
-        pickle.dump(self,open("%s.p"%(self.name),"wb"))
+    def save(self,path=None):
+        if path == None:
+            pickle.dump(self,open("%s.p"%(self.name),"wb"))
+        else:
+            pickle.dump(self,open("%s.p"%path,"wb"))
         return
 
     def load(self,fname):
