@@ -149,6 +149,8 @@ class Emulator(object):
 
     """
     This predicts a single ystar given an xstar.
+
+    The output is ystar and the variance of ystar.
     """
     def predict_one_point(self,xs):
         if not self.trained:
@@ -158,12 +160,14 @@ class Emulator(object):
         Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kinv,\
                                self.Kxxstar,self.Kxstarxstar
         return (np.dot(Kxxs,np.dot(Kinv,self.ydata)),\
-                np.sqrt(Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs))))
+                Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs)))
 
     """
     This is a wrapper for predict_one_point so that
     we can work with a list of xstars that are predicted
     one at a time.
+
+    The output is ystar and the variance of ystar.
     """
     def predict(self,xs):
         if not self.trained:
@@ -188,20 +192,19 @@ if __name__ == '__main__':
     yerr = 0.05+0.5 * np.random.rand(len(x1))
     y = np.sin(x1) + yerr + np.cos(x2)
     x = np.array([x1,x2])
-    print x.shape
 
     #Declare an emulator, train it, and predict with it.
     emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
     emu.train()
     emu.save("Dev_emulator")
-    print "here",emu
     emu.load("Dev_emulator")
     print "Best parameters = ",emu.length_best,emu.amplitude_best
     N = 100
     xstar = np.array([np.linspace(np.min(x1)-1,np.max(x1)+1,N),\
                       np.linspace(np.max(x2)+1,np.min(x2)-1,N)]).T
 
-    ystar,ystarerr = emu.predict(xstar)
+    ystar,ystarvar = emu.predict(xstar)
+    ystarerr = np.sqrt(ystarvar)
 
     import matplotlib.pyplot as plt
     xplot = x1

@@ -142,6 +142,8 @@ class Emulator(object):
 
     """
     This predicts a single ystar given an xstar.
+
+    The output is ystar and the variance of ystar.
     """
     def predict_one_point(self,xs):
         if not self.trained:
@@ -151,12 +153,14 @@ class Emulator(object):
         Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kinv,\
                                self.Kxxstar,self.Kxstarxstar
         return (np.dot(Kxxs,np.dot(Kinv,self.ydata)),\
-                np.sqrt(Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs))))
+                Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs)))
 
     """
     This is a wrapper for predict_one_point so that
     we can work with a list of xstars that are predicted
     one at a time.
+
+    The output is ystar and the variance of ystar.
     """
     def predict(self,xs):
         if not self.trained:
@@ -192,7 +196,8 @@ if __name__ == '__main__':
     print "Best parameters = ",emu.length_best,emu.amplitude_best
 
     xstar = np.linspace(np.min(x)-0.1,np.max(x)+1,500)
-    ystar,ystarerr = emu.predict(xstar)
+    ystar,ystarvar = emu.predict(xstar)
+    ystarerr = np.sqrt(ystarvar)
 
     import matplotlib.pyplot as plt
     plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o',ms=2,label="f")
@@ -200,7 +205,6 @@ if __name__ == '__main__':
     plt.plot(xstar,ystar+ystarerr,ls='-',c='g')
     plt.plot(xstar,ystar-ystarerr,ls='-',c='g')
     #plt.show()
-
 
     x2 = np.loadtxt("test_data/scale_factors.txt")
     y2 = np.loadtxt("test_data/garr.txt")
@@ -212,7 +216,8 @@ if __name__ == '__main__':
     emu2.load("Test_emulator2")
     print "Best parameters = ",emu2.length_best,emu2.amplitude_best
     xstar2 = np.linspace(np.min(x2)-0.1,np.max(x2)+1,500)
-    ystar2,ystarerr2 = emu2.predict(xstar2)
+    ystar2,ystarvar2 = emu2.predict(xstar2)
+    ystarerr2 = np.sqrt(ystarvar2)
     plt.errorbar(x2,y2,np.fabs(yerr2),ls='',marker='o',ms=2,label="g")
     plt.plot(xstar2,ystar2,ls='-',c='r')
     plt.plot(xstar2,ystar2+ystarerr2,ls='-',c='g')
