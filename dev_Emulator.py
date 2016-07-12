@@ -58,7 +58,7 @@ class Emulator(object):
         self.Kinv = emu_in.Kinv
         self.Kxxstar = emu_in.Kxxstar
         self.Kxstarxstar = emu_in.Kxstarxstar
-        self.length_best = emu_in.length_best
+        self.lengths_best = emu_in.lengths_best
         self.amplitude_best = emu_in.amplitude_best
         self.trained = emu_in.trained
         return
@@ -99,7 +99,7 @@ class Emulator(object):
     Used for predicting ystar at xstar.
     """
     def make_Kxxstar(self,xs):
-        x,length,amplitude = self.xdata,self.length_best,self.amplitude_best
+        x,length,amplitude = self.xdata,self.lengths_best,self.amplitude_best
         N = len(x)
         Kxxs = np.zeros(N)
         for i in range(len(x)):
@@ -112,7 +112,7 @@ class Emulator(object):
     Used for predicting ystar at xstar.
     """
     def make_Kxstarxstar(self,xs):
-        length,amplitude = self.length_best,self.amplitude_best
+        length,amplitude = self.lengths_best,self.amplitude_best
         self.Kxstarxstar = self.Corr(xs,xs,length,amplitude)
         return self.Kxstarxstar
 
@@ -137,11 +137,11 @@ class Emulator(object):
         #kriging lengths we need here
         ##################
         nll = lambda *args: -self.lnp(*args)
-        length_guesses = np.ones_like(self.lengths_best)
-        guesses = np.concatenate([length_guesses,np.array([1.0])])
+        lengths_guesses = np.ones_like(self.lengths_best)
+        guesses = np.concatenate([lengths_guesses,np.array([1.0])])
         result = op.minimize(nll,guesses)['x']
         lb,ab = np.exp(result[:-1]),np.exp(result[-1])
-        self.length_best,self.amplitude_best = lb,ab
+        self.lengths_best,self.amplitude_best = lb,ab
         self.make_Kxx(lb,ab)
         self.make_Kinv()
         self.trained = True
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     emu.train()
     emu.save("Dev_emulator")
     emu.load("Dev_emulator")
-    print "Best parameters = ",emu.length_best,emu.amplitude_best
+    print "Best parameters = ",emu.lengths_best,emu.amplitude_best
     N = 100
     xstar = np.array([np.linspace(np.min(x1)-1,np.max(x1)+1,N),\
                       np.linspace(np.max(x2)+1,np.min(x2)-1,N)]).T
