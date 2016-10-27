@@ -8,7 +8,7 @@ yerr = 0.05+0.5 * np.random.rand(len(x))
 y = np.cos(x) + yerr
 
 #Train
-emu = Emulator.Emulator(name="example_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
+emu = emulator.Emulator(name="example_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
 emu.train()
 
 #Create some data to predict on
