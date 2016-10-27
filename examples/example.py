@@ -5,14 +5,14 @@ import numpy as np
 np.random.seed(85719)
 x = np.linspace(0,10,num=10)
 yerr = 0.05+0.5 * np.random.rand(len(x))
-y = np.cos(x) + yerr
+y = np.cos(x) + yerr + 1
 
 #Train
 emu = emulator.Emulator(name="example_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
 emu.train()
 
 #Create some data to predict on
-xstar = np.linspace(min(x)-1,max(x)+1,500)
+xstar = np.linspace(min(x)-3,max(x)+3,500)
 ystar,ystarvar = emu.predict(xstar)
 ystarerr = np.sqrt(ystarvar)
 

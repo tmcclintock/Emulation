@@ -23,7 +23,9 @@ class Emulator(object):
         self.kernel_exponent = kernel_exponent
         if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
         self.xdata = xdata
-        self.ydata = ydata
+        self.ydata_true = ydata
+        self.ydata_mean = np.mean(ydata)
+        self.ydata = self.ydata_true - self.ydata_mean
         if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.yerr = yerr
         self.Kxx = None
@@ -173,7 +175,7 @@ class Emulator(object):
     def predict(self,xs):
         if not self.trained: raise Exception("Emulator is not yet trained")
         ystar,ystarvar = np.array([self.predict_one_point(xsi) for xsi in xs]).T
-        return ystar,ystarvar
+        return ystar+self.ydata_mean,ystarvar
 
 """
 Here is a unit test for the emulator.
