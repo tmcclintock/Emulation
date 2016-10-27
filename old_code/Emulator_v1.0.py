@@ -10,7 +10,6 @@ xdata, ydata, and yerr. Then you call Emulator.train()
 and then you are allowed to call Emulator.predict(xstar)
 on some new input xstar.
 
-This has a different kriging length for each element in x.
 """
 
 import numpy as np
@@ -21,14 +20,14 @@ class Emulator(object):
     def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
         self.name = name
         self.kernel_exponent = kernel_exponent
-        self.xdata = xdata.T
+        self.xdata = xdata
         self.ydata = ydata
         self.yerr = yerr
-        self.Kxx = None
-        self.Kinv = None
-        self.Kxxstar = None
-        self.Kxstarxstar = None
-        self.lengths_best = np.ones(np.atleast_2d(xdata).shape[0])
+        self.Kxx = 0
+        self.Kinv = 0
+        self.Kxxstar = 0
+        self.Kxstarxstar = 0
+        self.length_best = 0
         self.amplitude_best = 0
         self.trained = False
 
@@ -58,7 +57,7 @@ class Emulator(object):
         self.Kinv = emu_in.Kinv
         self.Kxxstar = emu_in.Kxxstar
         self.Kxstarxstar = emu_in.Kxstarxstar
-        self.lengths_best = emu_in.lengths_best
+        self.length_best = emu_in.length_best
         self.amplitude_best = emu_in.amplitude_best
         self.trained = emu_in.trained
         return
@@ -69,8 +68,7 @@ class Emulator(object):
     changing the kernel exponent.
     """
     def Corr(self,x1,x2,length,amplitude):
-        result = amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**self.kernel_exponent/length))
-        return result
+        return amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**self.kernel_exponent)/length)
 
     """
     This makes the Kxx array.
@@ -99,9 +97,8 @@ class Emulator(object):
     Used for predicting ystar at xstar.
     """
     def make_Kxxstar(self,xs):
-        x,length,amplitude = self.xdata,self.lengths_best,self.amplitude_best
-        N = len(x)
-        Kxxs = np.zeros(N)
+        x,length,amplitude = self.xdata,self.length_best,self.amplitude_best
+        Kxxs = np.zeros_like(x)
         for i in range(len(x)):
             Kxxs[i] = self.Corr(x[i],xs,length,amplitude)
         self.Kxxstar = Kxxs
@@ -112,7 +109,7 @@ class Emulator(object):
     Used for predicting ystar at xstar.
     """
     def make_Kxstarxstar(self,xs):
-        length,amplitude = self.lengths_best,self.amplitude_best
+        length,amplitude = self.length_best,self.amplitude_best
         self.Kxstarxstar = self.Corr(xs,xs,length,amplitude)
         return self.Kxstarxstar
 
@@ -122,7 +119,7 @@ class Emulator(object):
     """
     def lnp(self,params):
         y = self.ydata
-        length,amplitude = np.exp(params[:-1]),np.exp(params[-1])
+        length,amplitude = np.exp(params[0]),np.exp(params[1])
         K = self.make_Kxx(length,amplitude)
         Kinv = np.linalg.inv(K)
         return -0.5*np.dot(y,np.dot(Kinv,y))\
@@ -133,15 +130,11 @@ class Emulator(object):
     remembers the length, amplitude, and Kxx array.
     """
     def train(self):
-        #Before actually training, figure out how many
-        #kriging lengths we need here
-        ##################
         nll = lambda *args: -self.lnp(*args)
-        lengths_guesses = np.ones_like(self.lengths_best)
-        guesses = np.concatenate([lengths_guesses,np.array([1.0])])
-        result = op.minimize(nll,guesses)['x']
-        lb,ab = np.exp(result[:-1]),np.exp(result[-1])
-        self.lengths_best,self.amplitude_best = lb,ab
+        guesses = (1.0,1.0)
+        lb,ab = op.minimize(nll,guesses)['x']
+        lb,ab = np.exp(lb),np.exp(ab)
+        self.length_best,self.amplitude_best = lb,ab
         self.make_Kxx(lb,ab)
         self.make_Kinv()
         self.trained = True
@@ -187,30 +180,28 @@ if __name__ == '__main__':
 
     #Try emulating on some periodic data
     np.random.seed(85719)
-    x1 = np.linspace(0,10,num=10)#10 * np.sort(np.random.rand(Nx))
-    x2 = -np.linspace(0.,10.,num=10) * 0.5
-    yerr = 0.05+0.5 * np.random.rand(len(x1))
-    y = np.sin(x1) + yerr + np.cos(x2)
-    x = np.array([x1,x2])
+    x = np.linspace(0,10,num=10)#10 * np.sort(np.random.rand(Nx))
+    yerr = 0.05+0.5 * np.random.rand(len(x))
+    y = np.sin(x) + yerr
+    print x,y
 
     #Declare an emulator, train it, and predict with it.
-    emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
+    emu = Emulator(name="Test_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
     emu.train()
-    emu.save("Dev_emulator")
-    emu.load("Dev_emulator")
-    print "Best parameters = ",emu.lengths_best,emu.amplitude_best
-    N = 100
-    xstar = np.array([np.linspace(np.min(x1)-1,np.max(x1)+1,N),\
-                      np.linspace(np.max(x2)+1,np.min(x2)-1,N)]).T
+    emu.save()
+    emu.load("Test_emulator")
+    print "Best parameters = ",emu.length_best,emu.amplitude_best
 
+    xstar = np.linspace(min(x)-1,max(x)+1,500)
     ystar,ystarvar = emu.predict(xstar)
     ystarerr = np.sqrt(ystarvar)
 
     import matplotlib.pyplot as plt
-    xplot = x1
-    xsplot = np.linspace(np.min(x1)-1,np.max(x1)+1,N)
-    plt.errorbar(xplot,y,np.fabs(yerr),ls='',marker='o')
-    plt.plot(xsplot,ystar,ls='-',c='r')
-    plt.plot(xsplot,ystar+ystarerr,ls='-',c='g')
-    plt.plot(xsplot,ystar-ystarerr,ls='-',c='g')
+    plt.rc('text',usetex=True, fontsize=20)
+    plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o',ms=2,label="f")
+    plt.plot(xstar,ystar,ls='-',c='r')
+    plt.plot(xstar,ystar+ystarerr,ls='-',c='g')
+    plt.plot(xstar,ystar-ystarerr,ls='-',c='g')
+    plt.xlabel("x")
+    plt.ylabel("y")
     plt.show()
