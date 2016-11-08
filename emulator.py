@@ -19,14 +19,14 @@ import pickle
 
 class Emulator(object):
     def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
+        if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
+        if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.name = name
         self.kernel_exponent = kernel_exponent
-        if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
         self.xdata = xdata
         self.ymean = np.mean(ydata)
         self.ydata_real = ydata
         self.ydata = ydata - self.ymean #Take off the mean
-        if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.yerr = yerr
         self.Kxx = None
         self.Kinv = None
