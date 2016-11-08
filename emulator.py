@@ -23,7 +23,9 @@ class Emulator(object):
         self.kernel_exponent = kernel_exponent
         if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
         self.xdata = xdata
-        self.ydata = ydata
+        self.ymean = np.mean(ydata)
+        self.ydata_real = ydata
+        self.ydata = ydata - self.ymean #Take off the mean
         if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.yerr = yerr
         self.Kxx = None
@@ -127,11 +129,12 @@ class Emulator(object):
     def lnp(self,params):
         y = self.ydata
         lengths,amplitude = params[:-1],params[-1]
-        #length,amplitude = np.exp(params[:-1]),np.exp(params[-1])
         Kxx = self.make_Kxx(lengths,amplitude)
+        Kdet = np.linalg.det(2*np.pi*Kxx)
+        if Kdet < 0: return -np.inf
         Kinv = self.make_Kinv()
         return -0.5*np.dot(y,np.dot(Kinv,y))\
-            - 0.5*np.log(np.linalg.det(2*np.pi*Kxx))
+            - 0.5*np.log(Kdet)
 
     """
     This initiates the training process and
@@ -161,7 +164,7 @@ class Emulator(object):
         self.make_Kxstarxstar(xs)
         Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kinv,\
                                self.Kxxstar,self.Kxstarxstar
-        return (np.dot(Kxxs,np.dot(Kinv,self.ydata)), Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs)))
+        return (np.dot(Kxxs,np.dot(Kinv,self.ydata))+self.ymean, Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs)))
 
     """
     This is a wrapper for predict_one_point so that
@@ -180,15 +183,13 @@ Here is a unit test for the emulator.
 """
 if __name__ == '__main__':
     #Create some junk data to emulate
-    Nx = 10 #number of x points
+    Nx = 15 #number of x points
 
     #Try emulating on some periodic data
     np.random.seed(85719)
-    x1 = np.linspace(0.,10.,num=Nx)
-    x2 = -np.linspace(0.,10.,num=Nx) * 0.5
-    x = np.array([x1,x2]).T
+    x = np.linspace(0.,10.,num=Nx)
     yerr = 0.05 + 0.5*np.random.rand(Nx)
-    y = np.sin(x1) + np.cos(x2) + yerr
+    y = np.sin(x)+1
 
     #Declare an emulator, train it, and predict with it.
     print x.shape, y.shape
@@ -199,17 +200,14 @@ if __name__ == '__main__':
     print "Best parameters = ",emu.lengths_best,emu.amplitude_best
 
     N = 100
-    xstar = np.array([np.linspace(np.min(x1)-1,np.max(x1)+1,N),\
-                      np.linspace(np.max(x2)+1,np.min(x2)-1,N)]).T
+    xstar = np.linspace(np.min(x)-5,np.max(x)+5,N)
 
     ystar,ystarvar = emu.predict(xstar)
     ystarerr = np.sqrt(ystarvar)
 
     import matplotlib.pyplot as plt
-    xplot = x1
-    xsplot = np.linspace(np.min(x1)-1,np.max(x1)+1,N)
-    plt.errorbar(xplot,y,np.fabs(yerr),ls='',marker='o')
-    plt.plot(xsplot,ystar,ls='-',c='r')
-    plt.plot(xsplot,ystar+ystarerr,ls='-',c='g')
-    plt.plot(xsplot,ystar-ystarerr,ls='-',c='g')
+    plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o')
+    plt.plot(xstar,ystar,ls='-',c='r')
+    plt.plot(xstar,ystar+ystarerr,ls='-',c='g')
+    plt.plot(xstar,ystar-ystarerr,ls='-',c='g')
     plt.show()
