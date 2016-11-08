@@ -1,5 +1,5 @@
 """
-test with new branch
+
 This is a class for our emulators. It is a simple GP implementation
 that takes in some data, errorbars on that data, and an initial guess
 for hyperparameters for the GP and then emulates it. This is for
