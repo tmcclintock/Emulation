@@ -40,10 +40,7 @@ class Emulator(object):
         for i in range(len(xdata)):
             Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**self.kernel_exponent for xdataj in xdata])
         self.Kernel = np.array(Kernel)
-        print self.Kernel.shape, len(xdata), len(xdata.shape)
-        self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(xdata.shape))
-        print self.Kernel.shape
-        print "Xd:",self.Kernel.shape
+        self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
         self.trained = False
 
     def __str__(self):
@@ -94,9 +91,7 @@ class Emulator(object):
         x,y,yvar = self.xdata,self.ydata,self.yvar
         N = len(x)
         Kxx = np.zeros((N,N))
-        #if len(x.shape) > 1: 
         Kxx = amplitude*np.exp(np.sum(self.Kernel[:,:]/length,-1))
-        #else: Kxx = amplitude*np.exp(self.Kernel[:,:]/length)
         Kxx += np.diag(yvar)
         self.Kxx = Kxx
         return Kxx
@@ -143,8 +138,7 @@ class Emulator(object):
         Kdet = np.linalg.det(2*np.pi*Kxx)
         if Kdet < 0: return -np.inf
         Kinv = self.make_Kinv()
-        return -0.5*np.dot(y,np.dot(Kinv,y))\
-            - 0.5*np.log(Kdet)
+        return -0.5*np.dot(y,np.dot(Kinv,y)) - 0.5*np.log(Kdet)
 
     """
     This initiates the training process and
@@ -155,7 +149,6 @@ class Emulator(object):
         lengths_guesses = np.ones_like(self.lengths_best)
         guesses = np.concatenate([lengths_guesses,np.array([self.amplitude_best])])
         result = op.minimize(nll,guesses)['x']
-        #lb,ab = np.exp(result[:-1]),np.exp(result[-1])
         self.lengths_best,self.amplitude_best = result[:-1],result[-1]
         self.make_Kxx(self.lengths_best,self.amplitude_best)
         self.make_Kinv()
@@ -205,8 +198,8 @@ if __name__ == '__main__':
     print x.shape, y.shape
     emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
     emu.train()
-    emu.save("pickled_files/test_emulator")
-    emu.load("pickled_files/test_emulator")
+    #emu.save("pickled_files/test_emulator")
+    #emu.load("pickled_files/test_emulator")
     print "Best parameters = ",emu.lengths_best,emu.amplitude_best
 
     N = 100
