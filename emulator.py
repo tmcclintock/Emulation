@@ -133,7 +133,6 @@ class Emulator(object):
     def lnp(self,params):
         y = self.ydata
         lengths,amplitude = params[:-1],params[-1]
-        if amplitude < 0.0: return - np.inf
         Kxx = self.make_Kxx(lengths,amplitude)
         Kdet = np.linalg.det(2*np.pi*Kxx)
         if Kdet < 0: return -np.inf
