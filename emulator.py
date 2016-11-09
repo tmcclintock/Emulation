@@ -195,8 +195,8 @@ if __name__ == '__main__':
     print x.shape, y.shape
     emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
     emu.train()
-    emu.save("pickled_files/test_emulator")
-    emu.load("pickled_files/test_emulator")
+    #emu.save("pickled_files/test_emulator")
+    #emu.load("pickled_files/test_emulator")
     print "Best parameters = ",emu.lengths_best,emu.amplitude_best
 
     N = 100
