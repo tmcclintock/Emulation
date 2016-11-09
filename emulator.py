@@ -24,6 +24,7 @@ class Emulator(object):
         self.name = name
         self.kernel_exponent = kernel_exponent
         self.xdata = np.array(xdata)
+        self.Nx = len(self.xdata)
         self.ymean = np.mean(ydata)
         self.ydata_true = ydata
         self.ydata = ydata - self.ymean #Take off the mean
@@ -61,6 +62,7 @@ class Emulator(object):
         self.name = emu_in.name
         self.kernel_exponent = emu_in.kernel_exponent
         self.xdata = emu_in.xdata
+        self.Nx = emu_in.Nx
         self.ydata_true = emu.ydata
         self.ydata = emu_in.ydata
         self.ymean = emu.ymean
@@ -88,11 +90,9 @@ class Emulator(object):
     This makes the Kxx array.
     """
     def make_Kxx(self,length,amplitude):
-        x,y,yvar = self.xdata,self.ydata,self.yvar
-        N = len(x)
-        Kxx = np.zeros((N,N))
+        Kxx = np.zeros((self.Nx,self.Nx))
         Kxx = amplitude*np.exp(np.sum(self.Kernel[:,:]/length,-1))
-        Kxx += np.diag(yvar)
+        Kxx += np.diag(self.yvar)
         self.Kxx = Kxx
         return Kxx
         
