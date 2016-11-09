@@ -19,21 +19,28 @@ import pickle
 
 class Emulator(object):
     def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
+        if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
+        if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.name = name
         self.kernel_exponent = kernel_exponent
-        if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
-        self.xdata = xdata
+        self.xdata = np.array(xdata)
         self.ymean = np.mean(ydata)
-        self.ydata_real = ydata
+        self.ydata_true = ydata
         self.ydata = ydata - self.ymean #Take off the mean
-        if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.yerr = yerr
+        self.yvar = self.yerr**2
         self.Kxx = None
         self.Kinv = None
         self.Kxxstar = None
         self.Kxstarxstar = None
         self.lengths_best = np.ones(len(np.atleast_1d(xdata[0])))
         self.amplitude_best = 1.0
+        #Create an array of the differences between all X values
+        Kernel = []
+        for i in range(len(xdata)):
+            Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**self.kernel_exponent for xdataj in xdata])
+        self.Kernel = np.array(Kernel)
+        self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
         self.trained = False
 
     def __str__(self):
@@ -54,7 +61,9 @@ class Emulator(object):
         self.name = emu_in.name
         self.kernel_exponent = emu_in.kernel_exponent
         self.xdata = emu_in.xdata
+        self.ydata_true = emu.ydata
         self.ydata = emu_in.ydata
+        self.ymean = emu.ymean
         self.yerr = emu_in.yerr
         self.Kxx = emu_in.Kxx
         self.Kinv = emu_in.Kinv
@@ -62,6 +71,7 @@ class Emulator(object):
         self.Kxstarxstar = emu_in.Kxstarxstar
         self.lengths_best = emu_in.lengths_best
         self.amplitude_best = emu_in.amplitude_best
+        self.Kernel = emu.Kernel
         self.trained = emu_in.trained
         return
 
@@ -78,17 +88,11 @@ class Emulator(object):
     This makes the Kxx array.
     """
     def make_Kxx(self,length,amplitude):
-        x,y,yerr = self.xdata,self.ydata,self.yerr
+        x,y,yvar = self.xdata,self.ydata,self.yvar
         N = len(x)
         Kxx = np.zeros((N,N))
-        for i in range(N):
-            if len(x.shape) > 1:
-                Kxx[i] = amplitude*np.exp(-0.5*np.sum(np.fabs(x[i]-x)**self.kernel_exponent/length,1))
-            else:
-                for j in range(N):
-                    Kxx[i,j] = self.Corr(x[i],x[j],length,amplitude)
-            Kxx[i,i] += yerr[i]**2
-            continue
+        Kxx = amplitude*np.exp(np.sum(self.Kernel[:,:]/length,-1))
+        Kxx += np.diag(yvar)
         self.Kxx = Kxx
         return Kxx
         
@@ -133,8 +137,7 @@ class Emulator(object):
         Kdet = np.linalg.det(2*np.pi*Kxx)
         if Kdet < 0: return -np.inf
         Kinv = self.make_Kinv()
-        return -0.5*np.dot(y,np.dot(Kinv,y))\
-            - 0.5*np.log(Kdet)
+        return -0.5*np.dot(y,np.dot(Kinv,y)) - 0.5*np.log(Kdet)
 
     """
     This initiates the training process and
@@ -145,7 +148,6 @@ class Emulator(object):
         lengths_guesses = np.ones_like(self.lengths_best)
         guesses = np.concatenate([lengths_guesses,np.array([self.amplitude_best])])
         result = op.minimize(nll,guesses)['x']
-        #lb,ab = np.exp(result[:-1]),np.exp(result[-1])
         self.lengths_best,self.amplitude_best = result[:-1],result[-1]
         self.make_Kxx(self.lengths_best,self.amplitude_best)
         self.make_Kinv()
@@ -183,13 +185,13 @@ Here is a unit test for the emulator.
 """
 if __name__ == '__main__':
     #Create some junk data to emulate
-    Nx = 15 #number of x points
+    Nx = 25 #number of x points
 
     #Try emulating on some periodic data
     np.random.seed(85719)
     x = np.linspace(0.,10.,num=Nx)
     yerr = 0.05 + 0.5*np.random.rand(Nx)
-    y = np.sin(x)+1
+    y = np.sin(x) + 1
 
     #Declare an emulator, train it, and predict with it.
     print x.shape, y.shape
