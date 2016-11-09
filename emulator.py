@@ -39,7 +39,9 @@ class Emulator(object):
         Kernel = []
         for i in range(len(xdata)):
             Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**self.kernel_exponent for xdataj in xdata])
-        self.Kernel = np.array(Kernel).reshape(len(xdata),len(xdata),len(xdata.shape))
+        self.Kernel = np.array(Kernel)
+        print self.Kernel.shape, len(xdata), len(xdata.shape)
+        self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(xdata.shape))
         print self.Kernel.shape
         print "Xd:",self.Kernel.shape
         self.trained = False
