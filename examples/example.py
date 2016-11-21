@@ -12,7 +12,7 @@ emu = emulator.Emulator(name="example_emulator",xdata=x,ydata=y,yerr=np.fabs(yer
 emu.train()
 
 #Create some data to predict on
-xstar = np.linspace(min(x)-10,max(x)+3,500)
+xstar = np.linspace(min(x)-3,max(x)+3,500)
 ystar,ystarvar = emu.predict(xstar)
 ystarerr = np.sqrt(ystarvar)
 
