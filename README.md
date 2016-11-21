@@ -18,7 +18,7 @@ python setup.py clean
 Usage
 -----
 An example of how to use this code can be found
-in the examples/example.py file. The result is
+in the **examples/example.py** file. The result is
 an emulator which interpolates over the region
 where the data was generated, which can be seen
 in the following
