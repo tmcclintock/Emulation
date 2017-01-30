@@ -20,13 +20,14 @@ ystarerr = np.sqrt(ystarvar)
 import matplotlib.pyplot as plt
 plt.rc('text',usetex=True, fontsize=20)
 #Plot the training data
-plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o',ms=2,label="f")
+plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o',color='k',ms=8,label="f")
 #Plot the mean prediction
 plt.plot(xstar,ystar,ls='-',c='r')
 #Plot the errorbars
-plt.plot(xstar,ystar+ystarerr,ls='-',c='g')
-plt.plot(xstar,ystar-ystarerr,ls='-',c='g')
+plt.plot(xstar,ystar+ystarerr,ls='-',c='b')
+plt.plot(xstar,ystar-ystarerr,ls='-',c='b')
 #Labels
-plt.xlabel("x")
-plt.ylabel("y")
+plt.xlabel(r"$x$",fontsize=24)
+plt.ylabel(r"$y$",fontsize=24)
+plt.subplots_adjust(bottom=0.15,left=0.15)
 plt.show()
