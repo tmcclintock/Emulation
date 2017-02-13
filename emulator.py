@@ -133,6 +133,7 @@ class Emulator(object):
     def lnp(self,params):
         y = self.ydata
         lengths,amplitude = params[:-1],params[-1]
+        if amplitude < 0.0: return -np.inf
         Kxx = self.make_Kxx(lengths,amplitude)
         Kdet = np.linalg.det(2*np.pi*Kxx)
         if Kdet < 0: return -np.inf
@@ -160,8 +161,7 @@ class Emulator(object):
     The output is ystar and the variance of ystar.
     """
     def predict_one_point(self,xs):
-        if not self.trained:
-            raise Exception("Emulator is not yet trained")
+        if not self.trained: raise Exception("Emulator is not yet trained")
         self.make_Kxxstar(xs)
         self.make_Kxstarxstar(xs)
         Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kinv,\
@@ -205,6 +205,7 @@ if __name__ == '__main__':
     xstar = np.linspace(np.min(x)-5,np.max(x)+5,N)
 
     ystar,ystarvar = emu.predict(xstar)
+    print ystarvar
     ystarerr = np.sqrt(ystarvar)
 
     import matplotlib.pyplot as plt
