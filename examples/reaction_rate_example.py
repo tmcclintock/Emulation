@@ -27,6 +27,7 @@ lT9 = np.log(T9)
 lR = np.log(R)
 lerr = err/R
 
+#Make an emulator and train
 emu = emulator.Emulator(name="RR",xdata=lT9,ydata=lR,yerr=lerr)
 emu.train()
 
@@ -49,5 +50,6 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel(r"${\rm Temperature}\ [{\rm K}\times10^9]$",fontsize=24)
 plt.ylabel(r"${\rm Rate}\ [{\rm cm^3/mol/sec}]$",fontsize=24)
+plt.title(r"$D(p,\gamma) ^3\!He$",fontsize=24)
 plt.subplots_adjust(bottom=0.15,left=0.15)
 plt.show()
