@@ -25,4 +25,4 @@ example you should get
 
 while for the **reaction_rate_example.py** you should get
 
-![alt text](https://github.com/tmcclintock/Emulation/blob/master/figures/reaction_rate_example.png)
+![alt text](https://github.com/tmcclintock/Emulation/blob/master/figures/reaction_rate.png)
