@@ -1,4 +1,4 @@
-import emulator as emulator
+import emulator
 import numpy as np
 
 #Create random training data
