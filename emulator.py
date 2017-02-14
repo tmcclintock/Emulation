@@ -194,18 +194,15 @@ if __name__ == '__main__':
     y = np.sin(x) + 1
 
     #Declare an emulator, train it, and predict with it.
-    print x.shape, y.shape
     emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
     emu.train()
     #emu.save("pickled_files/test_emulator")
     #emu.load("pickled_files/test_emulator")
-    print "Best parameters = ",emu.lengths_best,emu.amplitude_best
 
     N = 100
     xstar = np.linspace(np.min(x)-5,np.max(x)+5,N)
 
     ystar,ystarvar = emu.predict(xstar)
-    print ystarvar
     ystarerr = np.sqrt(ystarvar)
 
     import matplotlib.pyplot as plt
