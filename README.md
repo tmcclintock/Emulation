@@ -17,10 +17,12 @@ python setup.py clean
 
 Usage
 -----
-An example of how to use this code can be found
-in the **examples/example.py** file. The result is
-an emulator which interpolates over the region
-where the data was generated, which can be seen
-in the following
+Examples of how to use this code can be found
+in the **examples/** directory. From the **cosine_example.py**
+example you should get
 
-![alt text](https://github.com/tmcclintock/Emulation/blob/master/figures/emulator_example.png)
+![alt text](https://github.com/tmcclintock/Emulation/blob/master/figures/cosine_example.png)
+
+while for the **reaction_rate_example.py** you should get
+
+![alt text](https://github.com/tmcclintock/Emulation/blob/master/figures/reaction_rate_example.png)
