@@ -15,7 +15,7 @@ This has a different kriging length for each element in x.
 
 import numpy as np
 import scipy.optimize as op
-import pickle
+import pickle, sys
 
 class Emulator(object):
     def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
@@ -112,8 +112,7 @@ class Emulator(object):
         x,length,amplitude = self.xdata,self.lengths_best,self.amplitude_best
         N = len(x)
         Kxxs = np.zeros(N)
-        for i in range(len(x)):
-            Kxxs[i] = self.Corr(x[i],xs,length,amplitude)
+        for i in range(len(x)): Kxxs[i] = self.Corr(x[i],xs,length,amplitude)
         self.Kxxstar = Kxxs
         return Kxxs
 
@@ -135,7 +134,7 @@ class Emulator(object):
         lengths,amplitude = params[:-1],params[-1]
         if amplitude < 0.0: return -np.inf
         Kxx = self.make_Kxx(lengths,amplitude)
-        Kdet = np.linalg.det(2*np.pi*Kxx)
+        Kdet = 2*np.pi*np.linalg.det(Kxx)
         if Kdet < 0: return -np.inf
         Kinv = self.make_Kinv()
         return -0.5*np.dot(y,np.dot(Kinv,y)) - 0.5*np.log(Kdet)
