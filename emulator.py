@@ -1,16 +1,9 @@
 """
-
 This is a class for our emulators. It is a simple GP implementation
 that takes in some data, errorbars on that data, and an initial guess
 for hyperparameters for the GP and then emulates it. This is for
 1D data or a vector input for x.
 
-In order to use it, you create an Emulator() object with
-xdata, ydata, and yerr. Then you call Emulator.train()
-and then you are allowed to call Emulator.predict(xstar)
-on some new input xstar.
-
-This has a different kriging length for each element in x.
 """
 
 import numpy as np
@@ -21,6 +14,7 @@ class Emulator(object):
     """The emulator class.
 
     """
+
 
     def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
         """The __init__ method for the emulator class.
@@ -58,21 +52,36 @@ class Emulator(object):
         self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
         self.trained = False
 
+
     def __str__(self):
         return self.name
 
-    """
-    These functions save all parts of the emulator, so that it can be
-    loaded up again. This could save the hassle of
-    training, if that happens to take a long time.
-    """
+
     def save(self,path=None):
-        if path == None: pickle.dump(self,open("%s.p"%(self.name),"wb"))
-        else: pickle.dump(self,open("%s.p"%path,"wb"))
+        """The save method. Uses pickle to save
+        everything about the emulator.
+
+        Args:
+            path (:obj:`str`, optional): The path of where to save the
+                emulator. Otherwise it saves it at './'.
+
+        """
+        if path == None: pickle.dump(self,open("./%s.p"%(self.name),"wb"))
+        else: pickle.dump(self,open("%s/%s.p"%(path,self.name),"wb"))
         return
 
-    def load(self,fname):
-        emu_in = pickle.load(open("%s.p"%(fname),"rb"))
+
+    def load(self,input_path):
+        """The load method. Uses pickle to load in
+        a saved emulator and overwrite the attributes
+        in self with those found in the loaded emulator.
+
+        Args:
+            input_path (:obj:`str`): the path to the emulator
+                to be loaded.
+
+        """
+        emu_in = pickle.load(open("%s.p"%(input_path),"rb"))
         self.name = emu_in.name
         self.kernel_exponent = emu_in.kernel_exponent
         self.xdata = emu_in.xdata
