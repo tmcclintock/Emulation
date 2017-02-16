@@ -18,7 +18,22 @@ import scipy.optimize as op
 import pickle, sys
 
 class Emulator(object):
+    """The emulator class.
+
+    """
+
     def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
+        """The __init__ method for the emulator class.
+
+        Args:
+            xdata: An array of floats or an nd.array of floats. Represents
+                the location of the training data in domain space.
+            ydata: An array of floats. The value or targets of the training data.
+            yerr: An array of floats. The standard deviations or error bars
+                on the ydata.
+            kernel_exponent (optional): The exponent used in the kernel function.
+
+        """
         if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
         if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.name = name
@@ -36,8 +51,7 @@ class Emulator(object):
         self.Kxstarxstar = None
         self.lengths_best = np.ones(len(np.atleast_1d(xdata[0])))
         self.amplitude_best = 1.0
-        #Create an array of the differences between all X values
-        Kernel = []
+        Kernel = [] # Create an array of the differences between all X values
         for i in range(len(xdata)):
             Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**self.kernel_exponent for xdataj in xdata])
         self.Kernel = np.array(Kernel)
