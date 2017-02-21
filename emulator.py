@@ -20,12 +20,10 @@ class Emulator(object):
         """The __init__ method for the emulator class.
 
         Args:
-            xdata: An array of floats or an nd.array of floats. Represents
-                the location of the training data in domain space.
-            ydata: An array of floats. The value or targets of the training data.
-            yerr: An array of floats. The standard deviations or error bars
-                on the ydata.
-            kernel_exponent (optional): The exponent used in the kernel function.
+            xdata (array_like): Location of the training data in domain space.
+            ydata (array_like): The value, or targets, of the training data.
+            yerr (array_like): The standard deviations or error bars on the ydata.
+            kernel_exponent (float; optional): The exponent used in the kernel function. Defaults is 2, or squared exponential.
 
         """
         if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
@@ -62,8 +60,7 @@ class Emulator(object):
         everything about the emulator.
 
         Args:
-            path (:obj:`str`, optional): The path of where to save the
-                emulator. Otherwise it saves it at './'.
+            path (:obj:`str`, optional): The path of where to save the emulator. Otherwise it saves it at './'.
 
         """
         if path == None: pickle.dump(self,open("./%s.p"%(self.name),"wb"))
@@ -77,8 +74,7 @@ class Emulator(object):
         in self with those found in the loaded emulator.
 
         Args:
-            input_path (:obj:`str`): the path to the emulator
-                to be loaded.
+            input_path (:obj:`str`): the path to the emulator to be loaded.
 
         """
         emu_in = pickle.load(open("%s.p"%(input_path),"rb"))
@@ -100,24 +96,36 @@ class Emulator(object):
         self.trained = emu_in.trained
         return
 
-    """
-    This is the kriging kernel. You can change it's form either
-    by hard-coding in something different or by just
-    changing the kernel exponent.
-    """
+
     def Corr(self,x1,x2,length,amplitude):
-        result = amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**self.kernel_exponent/length))
-        return result
+        """The kriging kernel, or correlation function. It uses the squared exponential by default.
+
+        Args:
+            x1 (float or array_like): First data point.
+            x2 (float or array_like): Second data point.
+            length (float or array_like): Kernel length for each dimension in x.
+            amplitude (float): Correlation amplitude.
+
+        Returns:
+            result (float): Correlation between x1 and x2.
+
+        """
+        return amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**self.kernel_exponent/length))
 
     """
     This makes the Kxx array.
     """
     def make_Kxx(self,length,amplitude):
-        Kxx = np.zeros((self.Nx,self.Nx))
-        Kxx = amplitude*np.exp(np.sum(self.Kernel[:,:]/length,-1))
-        Kxx += np.diag(self.yvar)
-        self.Kxx = Kxx
-        return Kxx
+        """Creates the Kxx array. This is the represents the connectivity between all of the training data, x.
+
+        Args:
+            length (float or array_like): Kernel length for each dimension in x.
+            amplitude (float): Correlation amplitude.
+
+        """
+        self.Kxx = amplitude*np.exp(np.sum(self.Kernel[:,:]/length,-1))
+        self.Kxx += np.diag(self.yvar)
+        return self.Kxx
         
     """
     This inverts the Kxx array.
