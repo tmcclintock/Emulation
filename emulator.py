@@ -118,6 +118,8 @@ class Emulator(object):
     def make_Kxx(self,length,amplitude):
         """Creates the Kxx array. This is the represents the connectivity between all of the training data, x.
 
+        Note: Sets self.Kxx, Kxx_det, and Kxx_inv.
+
         Args:
             length (float or array_like): Kernel length for each dimension in x.
             amplitude (float): Correlation amplitude.
@@ -125,16 +127,10 @@ class Emulator(object):
         """
         self.Kxx = amplitude*np.exp(np.sum(self.Kernel[:,:]/length,-1))
         self.Kxx += np.diag(self.yvar)
+        self.Kxx_det = np.linalg.det(self.Kxx)
+        self.Kxx_inv = np.linalg.inv(self.Kxx)
         return self.Kxx
         
-    """
-    This inverts the Kxx array.
-    """
-    def make_Kinv(self):
-        Kxx = self.Kxx
-        self.Kinv = np.linalg.inv(Kxx)
-        return self.Kinv
-
     """
     This creates the new row/column extensions K_x,xstar.
     Used for predicting ystar at xstar.
@@ -165,10 +161,9 @@ class Emulator(object):
         lengths,amplitude = params[:-1],params[-1]
         if amplitude < 0.0: return -np.inf
         Kxx = self.make_Kxx(lengths,amplitude)
-        Kdet = 2*np.pi*np.linalg.det(Kxx)
-        if Kdet < 0: return -np.inf
-        Kinv = self.make_Kinv()
-        return -0.5*np.dot(y,np.dot(Kinv,y)) - 0.5*np.log(Kdet)
+        if self.Kxx_det < 0: return -np.inf
+        Kinv = self.Kxx_inv
+        return -0.5*np.dot(y,np.dot(Kinv,y)) - 0.5*np.log(2*np.pi*self.Kxx_det)
 
     """
     This initiates the training process and
@@ -181,7 +176,6 @@ class Emulator(object):
         result = op.minimize(nll,guesses)['x']
         self.lengths_best,self.amplitude_best = result[:-1],result[-1]
         self.make_Kxx(self.lengths_best,self.amplitude_best)
-        self.make_Kinv()
         self.trained = True
         return
 
@@ -194,7 +188,7 @@ class Emulator(object):
         if not self.trained: raise Exception("Emulator is not yet trained")
         self.make_Kxxstar(xs)
         self.make_Kxstarxstar(xs)
-        Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kinv,\
+        Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kxx_inv,\
                                self.Kxxstar,self.Kxstarxstar
         return (np.dot(Kxxs,np.dot(Kinv,self.ydata))+self.ymean, Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs)))
 
