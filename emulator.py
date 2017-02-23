@@ -170,6 +170,11 @@ class Emulator(object):
     remembers the length, amplitude, and Kxx array.
     """
     def train(self):
+        """Train the emulator on the given x and y data.
+
+        Note: this is necessary before making predictions.
+
+        """
         nll = lambda *args: -self.lnp(*args)
         lengths_guesses = np.ones_like(self.lengths_best)
         guesses = np.concatenate([lengths_guesses,np.array([self.amplitude_best])])
