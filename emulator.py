@@ -96,7 +96,6 @@ class Emulator(object):
         self.trained = emu_in.trained
         return
 
-
     def Corr(self,x1,x2,length,amplitude):
         """The kriging kernel, or correlation function. It uses the squared exponential by default.
 
@@ -112,9 +111,6 @@ class Emulator(object):
         """
         return amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**self.kernel_exponent/length))
 
-    """
-    This makes the Kxx array.
-    """
     def make_Kxx(self,length,amplitude):
         """Creates the Kxx array. This is the represents the connectivity between all of the training data, x.
 
@@ -130,33 +126,46 @@ class Emulator(object):
         self.Kxx_det = np.linalg.det(self.Kxx)
         self.Kxx_inv = np.linalg.inv(self.Kxx)
         return self.Kxx
-        
-    """
-    This creates the new row/column extensions K_x,xstar.
-    Used for predicting ystar at xstar.
-    """
-    def make_Kxxstar(self,xs):
-        x,length,amplitude = self.xdata,self.lengths_best,self.amplitude_best
-        N = len(x)
-        Kxxs = np.zeros(N)
-        for i in range(len(x)): Kxxs[i] = self.Corr(x[i],xs,length,amplitude)
-        self.Kxxstar = Kxxs
-        return Kxxs
+    
 
-    """
-    This creates the new element K_xstarxstar.
-    Used for predicting ystar at xstar.
-    """
-    def make_Kxstarxstar(self,xs):
+    def make_Kxxstar(self,xstar):
+        """Computes the next row/column that extends K_xx. This is the covariance of xstar with the training points, xdata.
+
+        Args:
+            xstar (float or array_like): The new point to predict at.
+
+        Returns:
+            K(x,xstar) (array_like): The row/column that is the covariance of xstar with xdata.
+
+        """
         length,amplitude = self.lengths_best,self.amplitude_best
-        self.Kxstarxstar = self.Corr(xs,xs,length,amplitude)
+        self.Kxxstar = np.array([self.Corr(xi,xstar,length,amplitude) for xi in self.xdata])
+        return self.Kxxstar
+
+    def make_Kxstarxstar(self,xstar):
+        """Computes the next diagonal element that would extend K_xx to the bottom right. Represents the variance of x_star.
+
+        Args:
+            xstar (float or array_like): The new point to predict at.
+
+        Returns:
+            K(xstar,xstar) (float): Variance of xstar.
+
+        """
+        length,amplitude = self.lengths_best,self.amplitude_best
+        self.Kxstarxstar = self.Corr(xstar,xstar,length,amplitude)
         return self.Kxstarxstar
 
-    """
-    This is the log probability used for training
-    to find the best amplitude and kriging length.
-    """
     def lnp(self,params):
+        """The log of the probability distribution being sampled. This is used to find the optimal amplitude and kriging length(s).
+
+        Args:
+            params (array_like): Contains the length(s) and the amplitude.
+
+        Returns:
+            log_probability (float): Natural log of the probability of these parameters.
+
+        """
         y = self.ydata
         lengths,amplitude = params[:-1],params[-1]
         if amplitude < 0.0: return -np.inf
@@ -165,10 +174,6 @@ class Emulator(object):
         Kinv = self.Kxx_inv
         return -0.5*np.dot(y,np.dot(Kinv,y)) - 0.5*np.log(2*np.pi*self.Kxx_det)
 
-    """
-    This initiates the training process and
-    remembers the length, amplitude, and Kxx array.
-    """
     def train(self):
         """Train the emulator on the given x and y data.
 
