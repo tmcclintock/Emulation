@@ -222,7 +222,7 @@ class Emulator(object):
         return np.array([self.predict_one_point(xsi) for xsi in xstar]).T
 
 """
-Here is a unit test for the emulator.
+Here is an example of how to use the emulator.
 """
 if __name__ == '__main__':
     #Create some junk data to emulate
