@@ -189,30 +189,37 @@ class Emulator(object):
         self.trained = True
         return
 
-    """
-    This predicts a single ystar given an xstar.
+    def predict_one_point(self,xstar):
+        """Predicts a single data point given some point in the domain, xstar.
 
-    The output is ystar and the variance of ystar.
-    """
-    def predict_one_point(self,xs):
+        Args:
+            xstar (float or array_like): Single location in the domain.
+
+        Returns:
+            ystar (float): Predicted data point.
+            ystar_variance (float): Variance of ystar.
+
+        """
         if not self.trained: raise Exception("Emulator is not yet trained")
-        self.make_Kxxstar(xs)
-        self.make_Kxstarxstar(xs)
+        self.make_Kxxstar(xstar)
+        self.make_Kxstarxstar(xstar)
         Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kxx_inv,\
                                self.Kxxstar,self.Kxstarxstar
         return (np.dot(Kxxs,np.dot(Kinv,self.ydata))+self.ymean, Kxsxs - np.dot(Kxxs,np.dot(Kinv,Kxxs)))
 
-    """
-    This is a wrapper for predict_one_point so that
-    we can work with a list of xstars that are predicted
-    one at a time.
+    def predict(self,xstar):
+        """Predicts an array of data points given an array of points in the domain, xstar.
 
-    The output is ystar and the variance of ystar.
-    """
-    def predict(self,xs):
+        Args:
+            xstar (array_like): List of points in the domain.
+
+        Returns:
+            ystar (array_like): List of predicted data points.
+            ystar_variance (array_like): List of variances of ystar.
+
+        """
         if not self.trained: raise Exception("Emulator is not yet trained")
-        ystar,ystarvar = np.array([self.predict_one_point(xsi) for xsi in xs]).T
-        return ystar,ystarvar
+        return np.array([self.predict_one_point(xsi) for xsi in xstar]).T
 
 """
 Here is a unit test for the emulator.
@@ -221,24 +228,23 @@ if __name__ == '__main__':
     #Create some junk data to emulate
     Nx = 25 #number of x points
 
-    #Try emulating on some periodic data
+    #Emulate some periodic data
     np.random.seed(85719)
     x = np.linspace(0.,10.,num=Nx)
     yerr = 0.05 + 0.5*np.random.rand(Nx)
     y = np.sin(x) + 1
 
-    #Declare an emulator, train it, and predict with it.
-    emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
+    #Create an emulator and train it
+    emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
     emu.train()
-    #emu.save("pickled_files/test_emulator")
-    #emu.load("pickled_files/test_emulator")
 
+    #Predict with it
     N = 100
     xstar = np.linspace(np.min(x)-5,np.max(x)+5,N)
-
     ystar,ystarvar = emu.predict(xstar)
     ystarerr = np.sqrt(ystarvar)
 
+    #Plot everything
     import matplotlib.pyplot as plt
     plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o')
     plt.plot(xstar,ystar,ls='-',c='r')
