@@ -32,6 +32,5 @@ ystarerr = np.sqrt(ystarvar)
 import matplotlib.pyplot as plt
 plt.errorbar(x1,y,np.fabs(yerr),ls='',marker='o')
 plt.plot(x1star,ystar,ls='-',c='r')
-plt.plot(x1star,ystar+ystarerr,ls='-',c='g')
-plt.plot(x1star,ystar-ystarerr,ls='-',c='g')
+plt.fill_between(x1star, ystar+ystarerr, ystar-ystarerr, alpha=0.2, color='b')
 plt.show()

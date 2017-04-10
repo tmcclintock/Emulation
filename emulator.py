@@ -242,6 +242,5 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o')
     plt.plot(xstar,ystar,ls='-',c='r')
-    plt.plot(xstar,ystar+ystarerr,ls='-',c='g')
-    plt.plot(xstar,ystar-ystarerr,ls='-',c='g')
+    plt.fill_between(xstar, ystar+ystarerr, ystar-ystarerr, alpha=0.2, color='b')
     plt.show()

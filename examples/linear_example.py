@@ -25,8 +25,7 @@ plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o',color='k',ms=8,label="f")
 #Plot the mean prediction
 plt.plot(xstar,ystar,ls='-',c='r')
 #Plot the errorbars
-plt.plot(xstar,ystar+ystarerr,ls='-',c='b')
-plt.plot(xstar,ystar-ystarerr,ls='-',c='b')
+plt.fill_between(xstar, ystar+ystarerr, ystar-ystarerr, alpha=0.2, color='b')
 #Labels
 plt.xlabel(r"$x$",fontsize=24)
 plt.ylabel(r"$y$",fontsize=24)

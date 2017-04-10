@@ -43,8 +43,7 @@ R_prederr = lR_prederr*R_pred
 #Note: the emuator preduction is very tight, so the
 #error bars are almost imperceptible
 plt.errorbar(T9,R,yerr=err,c='k',marker='.',ls='')
-plt.plot(T9_pred,R_pred+R_prederr,c='b')
-plt.plot(T9_pred,R_pred-R_prederr,c='b')
+plt.fill_between(T9_pred, R_pred+R_prederr, R_pred-R_prederr, alpha=0.2, color='b')
 plt.plot(T9_pred,R_pred,c='r')
 plt.xscale('log')
 plt.yscale('log')
