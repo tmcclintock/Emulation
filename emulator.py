@@ -183,7 +183,7 @@ class Emulator(object):
         nll = lambda *args: -self.lnp(*args)
         lengths_guesses = np.ones_like(self.lengths_best)
         guesses = np.concatenate([lengths_guesses,np.array([self.amplitude_best])])
-        result = op.minimize(nll,guesses)['x']
+        result = op.minimize(nll, guesses, method='BFGS')['x']
         self.lengths_best,self.amplitude_best = result[:-1],result[-1]
         self.make_Kxx(self.lengths_best,self.amplitude_best)
         self.trained = True
