@@ -1,12 +1,12 @@
 Emulation
 =========
-This is a short and simple imlpementation of basic Gaussian-Process
+This is a pure python imlpementation of basic Gaussian-Process
 (aka kriging) code. In the cosmology community it is known as
 an emulator, hence the name.
 
 Installation
 ------------
-To install simply write
+To install write
 ```
 python setup.py install
 ```
