@@ -15,8 +15,7 @@ class Emulator(object):
 
     """
 
-
-    def __init__(self,xdata,ydata,yerr,name=""):
+    def __init__(self, xdata, ydata, yerr, name=""):
         """The __init__ method for the emulator class.
 
         Args:
@@ -38,8 +37,8 @@ class Emulator(object):
         self.Kinv = None
         self.Kxxstar = None
         self.Kxstarxstar = None
-        self.lengths_best = np.ones(len(np.atleast_1d(xdata[0])))
-        self.amplitude_best = 1.0
+        self.Ls = np.ones(len(np.atleast_1d(xdata[0])))
+        self.k0 = 1.0
         Kernel = [] # Create an array of the differences between all X values
         for i in range(len(xdata)):
             Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**2 for xdataj in xdata])
@@ -47,10 +46,8 @@ class Emulator(object):
         self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
         self.trained = False
 
-
     def __str__(self):
         return self.name
-
 
     def save(self,path=None):
         """The save method. Uses pickle to save
@@ -63,7 +60,6 @@ class Emulator(object):
         if path == None: pickle.dump(self,open("./%s.p"%(self.name),"wb"))
         else: pickle.dump(self,open("%s/%s.p"%(path,self.name),"wb"))
         return
-
 
     def load(self,input_path):
         """The load method. Uses pickle to load in
@@ -86,38 +82,38 @@ class Emulator(object):
         self.Kinv = emu_in.Kinv
         self.Kxxstar = emu_in.Kxxstar
         self.Kxstarxstar = emu_in.Kxstarxstar
-        self.lengths_best = emu_in.lengths_best
-        self.amplitude_best = emu_in.amplitude_best
+        self.Ls = emu_in.Ls
+        self.k0 = emu_in.k0
         self.Kernel = emu.Kernel
         self.trained = emu_in.trained
         return
 
-    def Corr(self,x1,x2,length,amplitude):
+    def Corr(self,x1,x2,Ls,k0):
         """The kriging kernel, or correlation function. It uses the squared exponential by default.
 
         Args:
             x1 (float or array_like): First data point.
             x2 (float or array_like): Second data point.
-            length (float or array_like): Kernel length for each dimension in x.
-            amplitude (float): Correlation amplitude.
+            Ls (float or array_like): Kernel length for each dimension in x.
+            k0 (float): Correlation amplitude.
 
         Returns:
             result (float): Correlation between x1 and x2.
 
         """
-        return amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**2/length))
+        return k0*np.exp(-0.5*np.sum(np.fabs(x1-x2)**2/Ls))
 
-    def make_Kxx(self,length,amplitude):
+    def make_Kxx(self,Ls,k0):
         """Creates the Kxx array. This is the represents the connectivity between all of the training data, x.
 
         Note: Sets self.Kxx, Kxx_det, and Kxx_inv.
 
         Args:
-            length (float or array_like): Kernel length for each dimension in x.
-            amplitude (float): Correlation amplitude.
+            Ls (float or array_like): Kernel length for each dimension in x.
+            k0 (float): Correlation amplitude.
 
         """
-        self.Kxx = amplitude*np.exp(np.sum(self.Kernel[:,:]/length,-1))
+        self.Kxx = k0*np.exp(np.sum(self.Kernel[:,:]/Ls,-1))
         self.Kxx += np.diag(self.yvar)
         self.Kxx_det = np.linalg.det(self.Kxx)
         self.Kxx_inv = np.linalg.inv(self.Kxx)
@@ -134,8 +130,8 @@ class Emulator(object):
             K(x,xstar) (array_like): The row/column that is the covariance of xstar with xdata.
 
         """
-        length,amplitude = self.lengths_best,self.amplitude_best
-        self.Kxxstar = np.array([self.Corr(xi,xstar,length,amplitude) for xi in self.xdata])
+        Ls,k0 = self.Ls,self.k0
+        self.Kxxstar = np.array([self.Corr(xi,xstar,Ls,k0) for xi in self.xdata])
         return self.Kxxstar
 
     def make_Kxstarxstar(self,xstar):
@@ -148,8 +144,8 @@ class Emulator(object):
             K(xstar,xstar) (float): Variance of xstar.
 
         """
-        length,amplitude = self.lengths_best,self.amplitude_best
-        self.Kxstarxstar = self.Corr(xstar,xstar,length,amplitude)
+        Ls,k0 = self.Ls,self.k0
+        self.Kxstarxstar = self.Corr(xstar,xstar,Ls,k0)
         return self.Kxstarxstar
 
     def lnp(self,params):
@@ -163,9 +159,9 @@ class Emulator(object):
 
         """
         y = self.ydata
-        lengths,amplitude = params[:-1],params[-1]
-        if amplitude < 0.0: return -np.inf
-        Kxx = self.make_Kxx(lengths,amplitude)
+        Lss,k0 = params[:-1],params[-1]
+        if k0 < 0.0: return -np.inf
+        Kxx = self.make_Kxx(Lss,k0)
         if self.Kxx_det < 0: return -np.inf
         Kinv = self.Kxx_inv
         return -0.5*np.dot(y,np.dot(Kinv,y)) - 0.5*np.log(2*np.pi*self.Kxx_det)
@@ -177,11 +173,11 @@ class Emulator(object):
 
         """
         nll = lambda *args: -self.lnp(*args)
-        lengths_guesses = np.ones_like(self.lengths_best)
-        guesses = np.concatenate([lengths_guesses,np.array([self.amplitude_best])])
+        Ls_guesses = np.ones_like(self.Ls)
+        guesses = np.concatenate([Ls_guesses,np.array([self.k0])])
         result = op.minimize(nll, guesses, method='BFGS')['x']
-        self.lengths_best,self.amplitude_best = result[:-1],result[-1]
-        self.make_Kxx(self.lengths_best,self.amplitude_best)
+        self.Ls,self.k0 = result[:-1],result[-1]
+        self.make_Kxx(self.Ls,self.k0)
         self.trained = True
         return
 

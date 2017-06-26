@@ -19,7 +19,7 @@ x = np.vstack((x1,x2)).T
 print x.shape, y.shape
 emu = Emulator.Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))#,kernel_exponent=1)
 emu.train()
-print "Best parameters = ",emu.lengths_best,emu.amplitude_best
+print "Best parameters = ",emu.Ls,emu.k0
 
 N = 100
 x1star = np.linspace(np.min(x1)-5,np.max(x1)+5,N)
