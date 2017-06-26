@@ -2,7 +2,11 @@ Emulation
 =========
 This is a pure python imlpementation of basic Gaussian-Process
 (aka kriging) code. In the cosmology community it is known as
-an emulator, hence the name.
+an emulator, hence the name. This only implements the 
+squared-exponential kernel, so it is less flexible than
+george. On the other hand it's dependencies are much less
+restrictive than george which can only be easily run on 
+a Mac or Linux machine.
 
 Installation
 ------------

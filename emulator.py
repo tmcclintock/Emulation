@@ -16,20 +16,17 @@ class Emulator(object):
     """
 
 
-    def __init__(self,xdata,ydata,yerr,name="",kernel_exponent=2):
+    def __init__(self,xdata,ydata,yerr,name=""):
         """The __init__ method for the emulator class.
 
         Args:
             xdata (array_like): Location of the training data in domain space.
             ydata (array_like): The value, or targets, of the training data.
             yerr (array_like): The standard deviations or error bars on the ydata.
-            kernel_exponent (float; optional): The exponent used in the kernel function. Defaults is 2, or squared exponential.
-
         """
         if len(xdata) != len(ydata):raise ValueError("xdata and ydata must be the same length.")
         if len(yerr) != len(ydata):raise ValueError("ydata and yerr must be the same length.")
         self.name = name
-        self.kernel_exponent = kernel_exponent
         self.xdata = np.array(xdata)
         self.Nx = len(self.xdata)
         self.ymean = np.mean(ydata)
@@ -45,7 +42,7 @@ class Emulator(object):
         self.amplitude_best = 1.0
         Kernel = [] # Create an array of the differences between all X values
         for i in range(len(xdata)):
-            Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**self.kernel_exponent for xdataj in xdata])
+            Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**2 for xdataj in xdata])
         self.Kernel = np.array(Kernel)
         self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
         self.trained = False
@@ -79,7 +76,6 @@ class Emulator(object):
         """
         emu_in = pickle.load(open("%s.p"%(input_path),"rb"))
         self.name = emu_in.name
-        self.kernel_exponent = emu_in.kernel_exponent
         self.xdata = emu_in.xdata
         self.Nx = emu_in.Nx
         self.ydata_true = emu.ydata
@@ -109,7 +105,7 @@ class Emulator(object):
             result (float): Correlation between x1 and x2.
 
         """
-        return amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**self.kernel_exponent/length))
+        return amplitude*np.exp(-0.5*np.sum(np.fabs(x1-x2)**2/length))
 
     def make_Kxx(self,length,amplitude):
         """Creates the Kxx array. This is the represents the connectivity between all of the training data, x.
