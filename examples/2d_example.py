@@ -33,4 +33,5 @@ import matplotlib.pyplot as plt
 plt.errorbar(x1,y,np.fabs(yerr),ls='',marker='o')
 plt.plot(x1star,ystar,ls='-',c='r')
 plt.fill_between(x1star, ystar+ystarerr, ystar-ystarerr, alpha=0.2, color='b')
+plt.xlim(min(x1star), max(x1star))
 plt.show()
