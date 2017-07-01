@@ -30,3 +30,8 @@ example you should get
 while for the **reaction_rate_example.py** you should get
 
 ![alt text](https://github.com/tmcclintock/Emulation/blob/master/figures/reaction_rate.png)
+
+You can emulate in multiple dimensions as well
+
+![alt text](https://github.com/tmcclintock/Emulation/blob/master/figures/2d_example.png)
+
