@@ -12,7 +12,7 @@ x = np.vstack((10*np.random.rand(N),10*np.random.rand(N)))
 yerr = 0.2 * np.ones(N)
 y = np.cos(x[0]) + np.cos(x[1]) + yerr*np.random.randn(N)
 #y = np.sin(x[0]) + np.cos(x[1]) + yerr*np.random.randn(N)
-#NOTE: for some reason the emulator doesn't like odd functions...
+#TODO: figure out why the emulator can't handle one odd and one even function...
 
 #Declare an emulator, train it, and predict with it.
 emu = Emulator.Emulator(name="2d",xdata=x.T,ydata=y,yerr=yerr)
