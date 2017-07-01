@@ -12,7 +12,6 @@ import pickle, sys
 
 class Emulator(object):
     """The emulator class.
-
     """
 
     def __init__(self, xdata, ydata, yerr, name=""):
@@ -41,7 +40,7 @@ class Emulator(object):
         self.k0 = 1.0
         Kernel = [] # Create an array of the differences between all X values
         for i in range(len(xdata)):
-            Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**2 for xdataj in xdata])
+            Kernel.append([-0.5*(xdata[i]-xdataj)**2 for xdataj in xdata])
         self.Kernel = np.array(Kernel)
         self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
         self.make_Kxx(self.Ls, self.k0)
@@ -57,9 +56,8 @@ class Emulator(object):
 
         Returns:
             result (float): Correlation between x1 and x2.
-
         """
-        return k0*np.exp(-0.5*np.sum(np.fabs(x1-x2)**2/Ls))
+        return k0*np.exp(-0.5*np.sum((x1-x2)**2/Ls))
 
     def make_Kxx(self,Ls,k0):
         """Creates the Kxx array. This is the represents the connectivity between all of the training data, x.
@@ -69,7 +67,6 @@ class Emulator(object):
         Args:
             Ls (float or array_like): Kernel length for each dimension in x.
             k0 (float): Correlation amplitude.
-
         """
         self.Kxx = k0*np.exp(np.sum(self.Kernel[:,:]/Ls,-1))
         self.Kxx += np.diag(self.yvar)
@@ -86,7 +83,6 @@ class Emulator(object):
 
         Returns:
             K(x,xstar) (array_like): The row/column that is the covariance of xstar with xdata.
-
         """
         Ls,k0 = self.Ls,self.k0
         self.Kxxstar = np.array([self.Corr(xi,xstar,Ls,k0) for xi in self.xdata])
@@ -100,7 +96,6 @@ class Emulator(object):
 
         Returns:
             K(xstar,xstar) (float): Variance of xstar.
-
         """
         Ls,k0 = self.Ls,self.k0
         self.Kxstarxstar = self.Corr(xstar,xstar,Ls,k0)
@@ -114,7 +109,6 @@ class Emulator(object):
 
         Returns:
             log_probability (float): Natural log of the probability of these parameters.
-
         """
         y = self.ydata
         Lss,k0 = params[:-1],params[-1]
@@ -128,7 +122,6 @@ class Emulator(object):
         """Train the emulator on the given x and y data.
 
         Note: this is necessary before making predictions.
-
         """
         nll = lambda *args: -self.lnp(*args)
         Ls_guesses = np.ones_like(self.Ls)
@@ -147,7 +140,6 @@ class Emulator(object):
         Returns:
             ystar (float): Predicted data point.
             ystar_variance (float): Variance of ystar.
-
         """
         self.make_Kxxstar(xstar)
         self.make_Kxstarxstar(xstar)
@@ -177,9 +169,9 @@ if __name__ == '__main__':
 
     #Emulate some periodic data
     np.random.seed(85719)
-    x = np.linspace(0.,10.,num=Nx)
-    yerr = 0.05 + 0.5*np.random.rand(Nx)
-    y = np.sin(x) + 1
+    x = np.linspace(0, 10, num=Nx)
+    yerr = 0.5 * np.ones(Nx)
+    y = np.sin(x) + 1 + yerr * np.random.randn(Nx)
 
     #Create an emulator and train it
     emu = Emulator(name="Dev_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
@@ -187,13 +179,13 @@ if __name__ == '__main__':
 
     #Predict with it
     N = 100
-    xstar = np.linspace(np.min(x)-5,np.max(x)+5,N)
-    ystar,ystarvar = emu.predict(xstar)
-    ystarerr = np.sqrt(ystarvar)
+    xstar = np.linspace(np.min(x) - 5 ,np.max(x) + 5, N)
+    ystar,var = emu.predict(xstar)
+    std = np.sqrt(var)
 
     #Plot everything
     import matplotlib.pyplot as plt
-    plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o')
-    plt.plot(xstar,ystar,ls='-',c='r')
-    plt.fill_between(xstar, ystar+ystarerr, ystar-ystarerr, alpha=0.2, color='b')
+    plt.errorbar(x, y, np.fabs(yerr), ls='', marker='o')
+    plt.plot(xstar, ystar, ls='-', c='r')
+    plt.fill_between(xstar, ystar + std, ystar - std, alpha=0.2, color='b')
     plt.show()
