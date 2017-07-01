@@ -44,7 +44,7 @@ class Emulator(object):
             Kernel.append([-0.5*np.fabs(xdata[i]-xdataj)**2 for xdataj in xdata])
         self.Kernel = np.array(Kernel)
         self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
-        self.trained = False
+        self.make_Kxx(self.Ls, self.k0)
 
     def Corr(self,x1,x2,Ls,k0):
         """The kriging kernel, or correlation function. It uses the squared exponential by default.
@@ -136,7 +136,6 @@ class Emulator(object):
         result = op.minimize(nll, guesses, method='BFGS')['x']
         self.Ls,self.k0 = result[:-1],result[-1]
         self.make_Kxx(self.Ls,self.k0)
-        self.trained = True
         return
 
     def predict_one_point(self,xstar):
@@ -150,7 +149,6 @@ class Emulator(object):
             ystar_variance (float): Variance of ystar.
 
         """
-        if not self.trained: raise Exception("Emulator is not yet trained")
         self.make_Kxxstar(xstar)
         self.make_Kxstarxstar(xstar)
         Kxx,Kinv,Kxxs,Kxsxs, = self.Kxx,self.Kxx_inv,\
@@ -168,7 +166,6 @@ class Emulator(object):
             ystar_variance (array_like): List of variances of ystar.
 
         """
-        if not self.trained: raise Exception("Emulator is not yet trained")
         return np.array([self.predict_one_point(xsi) for xsi in xstar]).T
 
 """
