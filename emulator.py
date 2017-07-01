@@ -46,48 +46,6 @@ class Emulator(object):
         self.Kernel = self.Kernel.reshape(len(xdata),len(xdata),len(np.atleast_1d(xdata[0])))
         self.trained = False
 
-    def __str__(self):
-        return self.name
-
-    def save(self,path=None):
-        """The save method. Uses pickle to save
-        everything about the emulator.
-
-        Args:
-            path (:obj:`str`, optional): The path of where to save the emulator. Otherwise it saves it at './'.
-
-        """
-        if path == None: pickle.dump(self,open("./%s.p"%(self.name),"wb"))
-        else: pickle.dump(self,open("%s/%s.p"%(path,self.name),"wb"))
-        return
-
-    def load(self,input_path):
-        """The load method. Uses pickle to load in
-        a saved emulator and overwrite the attributes
-        in self with those found in the loaded emulator.
-
-        Args:
-            input_path (:obj:`str`): the path to the emulator to be loaded.
-
-        """
-        emu_in = pickle.load(open("%s.p"%(input_path),"rb"))
-        self.name = emu_in.name
-        self.xdata = emu_in.xdata
-        self.Nx = emu_in.Nx
-        self.ydata_true = emu.ydata
-        self.ydata = emu_in.ydata
-        self.ymean = emu.ymean
-        self.yerr = emu_in.yerr
-        self.Kxx = emu_in.Kxx
-        self.Kinv = emu_in.Kinv
-        self.Kxxstar = emu_in.Kxxstar
-        self.Kxstarxstar = emu_in.Kxstarxstar
-        self.Ls = emu_in.Ls
-        self.k0 = emu_in.k0
-        self.Kernel = emu.Kernel
-        self.trained = emu_in.trained
-        return
-
     def Corr(self,x1,x2,Ls,k0):
         """The kriging kernel, or correlation function. It uses the squared exponential by default.
 
