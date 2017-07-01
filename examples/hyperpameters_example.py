@@ -12,10 +12,11 @@ plt.rc('text',usetex=True)
 plt.rc('font', size=20)
 
 #Create random training data
-np.random.seed(85719)
-x = np.linspace(0,10,num=10)
-yerr = 0.05+0.5 * np.random.rand(len(x))
-y = np.cos(x) + yerr + 1
+np.random.seed(0)
+Nx = 40
+x = 10*np.sort(np.random.rand(Nx))
+yerr = 0.2 * np.ones_like(x)
+y = np.cos(x) + 1 + yerr * np.random.randn(len(x))
 
 #Train
 emu = emulator.Emulator(name="example_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))

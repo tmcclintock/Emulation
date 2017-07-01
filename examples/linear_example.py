@@ -5,11 +5,13 @@ plt.rc('text', usetex=True)
 plt.rc('font', size=20)
 
 #Create random training data
-np.random.seed(12345)
-x = np.linspace(0,10,num=10)
-yerr = 0.05+0.5 * np.random.rand(len(x))
+np.random.seed(0)
+Nx = 10
+x = 10*np.sort(np.random.rand(Nx))
+yerr = 0.4 * np.ones_like(x)
 slope = 1.333
-y = slope*x + yerr - 1
+intercept = 1
+y = slope*x + intercept + yerr * np.random.randn(len(x))
 
 #Train
 emu = emulator.Emulator(name="example_emulator",xdata=x,ydata=y,yerr=np.fabs(yerr))
@@ -21,7 +23,7 @@ ystar,ystarvar = emu.predict(xstar)
 ystarerr = np.sqrt(ystarvar)
 
 #Plot the training data
-plt.errorbar(x,y,np.fabs(yerr),ls='',marker='o',color='k',ms=8,label="f")
+plt.errorbar(x,y,np.fabs(yerr),ls='',marker='.',color='k',ms=8,label="f")
 #Plot the mean prediction
 plt.plot(xstar,ystar,ls='-',c='r')
 #Plot the errorbars
